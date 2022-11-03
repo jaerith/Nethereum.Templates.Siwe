@@ -1,0 +1,57 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ExampleProjectSiwe.SiweRecap
+{
+    public class SiweNamespace
+    {
+        private readonly string _Namespace;
+
+        public SiweNamespace(string nmspace)
+        {
+            Validate(nmspace);
+
+            _Namespace = nmspace;
+        }
+
+        public override string ToString()
+        {
+            return _Namespace;
+        }
+
+        private void Validate(string nmspace)
+        {
+            var PreviousCharWasAlphanum = false;
+
+            foreach (char c in nmspace.ToCharArray())
+            {
+                if (Char.IsLetterOrDigit(c))
+                {
+                    PreviousCharWasAlphanum = true;
+                    continue;
+                }
+
+                if ((c == '-') && PreviousCharWasAlphanum)
+                {
+                    PreviousCharWasAlphanum = false;
+                    continue;
+                }
+
+                if (c == '-')
+                {
+                    throw new SiweRecapException("Invalid namespace -> issue with hyphens");
+                }
+
+                throw new SiweRecapException("Invalid namespace -> issue with characters");
+            }
+
+            if (!PreviousCharWasAlphanum)
+            {
+                throw new SiweRecapException("Invalid namespace -> issue with hyphens");
+            }
+        }
+    }
+}
