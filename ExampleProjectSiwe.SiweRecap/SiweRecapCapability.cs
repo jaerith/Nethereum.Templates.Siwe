@@ -5,20 +5,24 @@ using System.Text;
 
 namespace ExampleProjectSiwe.SiweRecap
 {
+    using NamespaceActionsMap = Dictionary<string, HashSet<string>>;
+
     public class SiweRecapCapability
     {
+        public const string DefaultTarget = "any";
+
         private readonly HashSet<string> _defaultActions;
 
-        private readonly Dictionary<SiweNamespace, HashSet<string>> _targetedActions;
+        private readonly NamespaceActionsMap _targetedActions;
 
         private readonly Dictionary<string, string> _extraFields;
 
         public HashSet<string> DefaultActions { get { return _defaultActions; } }
 
-        public Dictionary<SiweNamespace, HashSet<string>> TargetedActions { get { return _targetedActions; } }
+        public NamespaceActionsMap TargetedActions { get { return _targetedActions; } }
 
         public SiweRecapCapability(HashSet<string> defaultActions,
-        Dictionary<SiweNamespace, HashSet<string>> targetedActions,
+                               NamespaceActionsMap targetedActions,
                         Dictionary<string, string> extraFields)
         {
             _defaultActions  = defaultActions;
@@ -33,11 +37,11 @@ namespace ExampleProjectSiwe.SiweRecap
             return Convert.ToBase64String(Encoding.ASCII.GetBytes(jsonCapability));
         }
 
-        public bool HasPermissionByTarget(SiweNamespace siweNamspace, string action)
+        public bool HasPermissionByTarget(string target, string action)
         {
             HashSet<string>? targetActions = null;
 
-            return _targetedActions.TryGetValue(siweNamspace, out targetActions) &&
+            return _targetedActions.TryGetValue(target, out targetActions) &&
                    (HasPermissionByDefault(action) || targetActions.Any(x => x.ToLower() == action.ToLower()));
         }
 
@@ -47,31 +51,14 @@ namespace ExampleProjectSiwe.SiweRecap
         }
 
         public HashSet<string> ToStatementText(SiweNamespace siweNamespace)
-        {
-            var textSectionBuilder      = new StringBuilder();
-            var capabilityTextLines     = new HashSet<string>();
-            var defaultActionsFormatted = new HashSet<string>();
-            var actionsFormatted        = new HashSet<string>();
+        {            
+            var capabilityTextLines = new HashSet<string>();
 
-            _defaultActions
-                .ToList()
-                .ForEach(x => defaultActionsFormatted.Append(FormatAction(siweNamespace, x)));
+            capabilityTextLines.Add(FormatDefaultActions(siweNamespace, _defaultActions));
 
-            foreach (var siweNamespaceKey in _targetedActions.Keys)
+            foreach (var target in _targetedActions.Keys)
             {
-                _targetedActions[siweNamespaceKey]
-                    .ToList()
-                    .ForEach(x => actionsFormatted.Append(FormatAction(siweNamespaceKey, x)));
-            }
-
-            if (defaultActionsFormatted.Count > 0)
-            {
-                capabilityTextLines.Add(String.Join(", ", defaultActionsFormatted));
-            }
-
-            if (actionsFormatted.Count > 0)
-            {
-                capabilityTextLines.Add(String.Join(", ", actionsFormatted));
+                capabilityTextLines.Add(FormatActions(siweNamespace, target, _targetedActions[target]));
             }
 
             return capabilityTextLines;
@@ -79,9 +66,14 @@ namespace ExampleProjectSiwe.SiweRecap
 
         #region Static Methods
 
-        static public string FormatAction(SiweNamespace siweNamespace, string defaultAction)
+        static public string FormatDefaultActions(SiweNamespace siweNamespace, HashSet<string> actions)
         {
-            return string.Format("{0}: {1} for any.", siweNamespace, defaultAction);
+            return FormatActions(siweNamespace, DefaultTarget, actions);
+        }
+
+        static public string FormatActions(SiweNamespace siweNamespace, string target, HashSet<string> actions)
+        {
+            return string.Format("{0}: {1} for {2}.", siweNamespace, string.Join(", ", actions), target);
         }
 
         #endregion 
