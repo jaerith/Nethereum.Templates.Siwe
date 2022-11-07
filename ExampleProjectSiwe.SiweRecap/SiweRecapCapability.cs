@@ -1,36 +1,49 @@
 ﻿using System.Collections.Generic;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text;
 
 namespace ExampleProjectSiwe.SiweRecap
 {
     public class SiweRecapCapability
     {
-        private readonly HashSet<string> _DefaultActions;
+        private readonly HashSet<string> _defaultActions;
 
-        private readonly Dictionary<SiweNamespace, HashSet<string>> _TargetedActions;
+        private readonly Dictionary<SiweNamespace, HashSet<string>> _targetedActions;
 
-        private readonly Dictionary<string, string> _ExtraFields;
+        private readonly Dictionary<string, string> _extraFields;
+
+        public HashSet<string> DefaultActions { get { return _defaultActions; } }
+
+        public Dictionary<SiweNamespace, HashSet<string>> TargetedActions { get { return _targetedActions; } }
 
         public SiweRecapCapability(HashSet<string> defaultActions,
         Dictionary<SiweNamespace, HashSet<string>> targetedActions,
                         Dictionary<string, string> extraFields)
         {
-            _DefaultActions  = defaultActions;
-            _TargetedActions = targetedActions;
-            _ExtraFields     = extraFields;
+            _defaultActions  = defaultActions;
+            _targetedActions = targetedActions;
+            _extraFields     = extraFields;
+        }
+
+        public string Encode()
+        {
+            string jsonCapability = JsonSerializer.Serialize(this);
+
+            return Convert.ToBase64String(Encoding.ASCII.GetBytes(jsonCapability));
         }
 
         public bool HasPermissionByTarget(SiweNamespace siweNamspace, string action)
         {
             HashSet<string>? targetActions = null;
 
-            return _TargetedActions.TryGetValue(siweNamspace, out targetActions) &&
+            return _targetedActions.TryGetValue(siweNamspace, out targetActions) &&
                    (HasPermissionByDefault(action) || targetActions.Any(x => x.ToLower() == action.ToLower()));
         }
 
         public bool HasPermissionByDefault(string action)
         {
-            return _DefaultActions.Any(x => x.ToLower() == action.ToLower());
+            return _defaultActions.Any(x => x.ToLower() == action.ToLower());
         }
 
         public HashSet<string> ToStatementText(SiweNamespace siweNamespace)
@@ -40,13 +53,13 @@ namespace ExampleProjectSiwe.SiweRecap
             var defaultActionsFormatted = new HashSet<string>();
             var actionsFormatted        = new HashSet<string>();
 
-            _DefaultActions
+            _defaultActions
                 .ToList()
                 .ForEach(x => defaultActionsFormatted.Append(FormatAction(siweNamespace, x)));
 
-            foreach (var siweNamespaceKey in _TargetedActions.Keys)
+            foreach (var siweNamespaceKey in _targetedActions.Keys)
             {
-                _TargetedActions[siweNamespaceKey]
+                _targetedActions[siweNamespaceKey]
                     .ToList()
                     .ForEach(x => actionsFormatted.Append(FormatAction(siweNamespaceKey, x)));
             }

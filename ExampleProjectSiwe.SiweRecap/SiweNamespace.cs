@@ -8,18 +8,18 @@ namespace ExampleProjectSiwe.SiweRecap
 {
     public class SiweNamespace
     {
-        private readonly string _Namespace;
+        private readonly string _namespace;
 
         public SiweNamespace(string nmspace)
         {
             Validate(nmspace);
 
-            _Namespace = nmspace;
+            _namespace = nmspace;
         }
 
         public override string ToString()
         {
-            return _Namespace;
+            return _namespace;
         }
 
         private void Validate(string nmspace)
