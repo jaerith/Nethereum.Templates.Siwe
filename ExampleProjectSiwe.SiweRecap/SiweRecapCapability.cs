@@ -30,6 +30,73 @@ namespace ExampleProjectSiwe.SiweRecap
             _extraFields     = extraFields;
         }
 
+        public static SiweRecapCapability? Decode(string encodedJsonCapability)
+        {
+            if (string.IsNullOrEmpty(encodedJsonCapability))
+            {
+                throw new SiweRecapException("Base64 Encoding of Recap Capability is empty or null.");
+            }
+
+            string decodedJsonCapability =
+                Encoding.ASCII.GetString(Convert.FromBase64String(encodedJsonCapability));
+
+            SiweRecapCapability? capability =
+                JsonSerializer.Deserialize<SiweRecapCapability>(decodedJsonCapability);
+
+            return capability;
+        }
+
+        public static SiweRecapCapability? DecodeResourceUrn(string resourceUrn, 
+                           Dictionary<string, SiweRecapCapability>? capabilityMap = null)
+        {
+            if (string.IsNullOrEmpty(resourceUrn))
+            {
+                throw new SiweRecapException("Resource Urn is empty or null.");
+            }
+
+            if (!resourceUrn.ToLower().StartsWith(SiweRecapExtensions.SiweRecapResourcePrefix))
+            {
+                throw new SiweRecapException("Resource Urn is not of the SIWE Recap type.");
+            }
+
+            string[] resourceUrnFields = resourceUrn.Split(':');
+            if (resourceUrnFields.Count() < 4)
+            {
+                throw new SiweRecapException("Resource Urn has incorrect number of fields.");
+            }
+
+            string siweNamespaceField    = resourceUrnFields[2];
+            string encodedJsonCapability = resourceUrnFields[3];
+
+            if (!string.IsNullOrEmpty(siweNamespaceField))
+            {
+                throw new SiweRecapException("Resource Urn has a null/empty namespace.");
+            }
+
+            if (!string.IsNullOrEmpty(encodedJsonCapability))
+            {
+                throw new SiweRecapException("Resource Urn has a null/empty Recap Object.");
+            }
+
+            SiweNamespace siweNamespace = new SiweNamespace(siweNamespaceField);
+
+            string decodedJsonCapability =
+                Encoding.ASCII.GetString(Convert.FromBase64String(encodedJsonCapability));
+
+            SiweRecapCapability? capability =
+                JsonSerializer.Deserialize<SiweRecapCapability>(decodedJsonCapability);
+
+            if ((capabilityMap != null) && (capability != null))
+            {
+                if (!capabilityMap.ContainsKey(siweNamespace.ToString()))
+                {
+                    capabilityMap[siweNamespace.ToString()] = capability;
+                }
+            }
+
+            return capability;
+        }
+
         public string Encode()
         {
             string jsonCapability = JsonSerializer.Serialize(this);
@@ -37,7 +104,7 @@ namespace ExampleProjectSiwe.SiweRecap
             return Convert.ToBase64String(Encoding.ASCII.GetBytes(jsonCapability));
         }
 
-        public bool HasPermissionByTarget(string target, string action)
+        public bool HasTargetPermission(string target, string action)
         {
             HashSet<string>? targetActions = null;
 
