@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,13 +8,13 @@ using Nethereum.Siwe.Core;
 
 namespace ExampleProjectSiwe.SiweRecap
 {
-    using CapabilityMapping = Dictionary<SiweNamespace, SiweRecapCapability>;
+    using CapabilityMap = Dictionary<SiweNamespace, SiweRecapCapability>;
 
     public static class SiweRecapExtensions
     {
         public const string SiweRecapResourcePrefix = "urn:recap";
 
-        public static SiweMessage InitRecap(this SiweMessage msg, CapabilityMapping capabilites, string delegateUri)
+        public static SiweMessage InitRecap(this SiweMessage msg, CapabilityMap capabilites, string delegateUri)
         {
             msg.InitRecapStatement(capabilites, delegateUri);
 
@@ -23,7 +23,7 @@ namespace ExampleProjectSiwe.SiweRecap
             return msg;
         }
 
-        public static void InitRecapStatement(this SiweMessage msg, CapabilityMapping capabilites, string delegateUri)
+        public static void InitRecapStatement(this SiweMessage msg, CapabilityMap capabilites, string delegateUri)
         {
             var lineNum = 0;
 
@@ -45,7 +45,7 @@ namespace ExampleProjectSiwe.SiweRecap
             msg.Statement = recapStatementBuilder.ToString();
         }
 
-        public static void InitRecapResources(this SiweMessage msg, CapabilityMapping capabilites, string delegateUri)
+        public static void InitRecapResources(this SiweMessage msg, CapabilityMap capabilites, string delegateUri)
         {
             msg.Resources = new List<string>();
 
@@ -58,6 +58,26 @@ namespace ExampleProjectSiwe.SiweRecap
                                                 , siweNamespace
                                                 , capability.Encode()));
             }
+        }
+
+        public static bool HasPermissions(this SiweMessage msg, SiweNamespace ns, string target, string action)
+        {
+            bool hasPermissions = false;
+
+            Dictionary<string, SiweRecapCapability>? capabilities = new Dictionary<string, SiweRecapCapability>();
+
+            msg.Resources?.ForEach(x => SiweRecapCapability.DecodeResourceUrn(x, capabilities));
+
+            if (capabilities.ContainsKey(ns.ToString()))
+            {
+                SiweRecapCapability capability = capabilities[ns.ToString()];
+
+                hasPermissions =
+                    capability.DefaultActions.Contains(action) ||
+                    capability.TargetedActions.Any(x => (x.Key == target) && capability.TargetedActions[x.Key].Contains(target));
+            }
+
+            return hasPermissions;
         }
     }
 }
