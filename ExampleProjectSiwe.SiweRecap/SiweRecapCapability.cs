@@ -7,6 +7,19 @@ namespace ExampleProjectSiwe.SiweRecap
 {
     using NamespaceActionsMap = Dictionary<string, HashSet<string>>;
 
+    internal class SiweRecapCapabilityDeserialized
+    {
+        public HashSet<string> DefaultActions { get; set; }
+
+        public NamespaceActionsMap TargetedActions { get; set; }
+
+        public SiweRecapCapabilityDeserialized()
+        { 
+            DefaultActions  = new HashSet<string>();
+            TargetedActions = new NamespaceActionsMap();
+        }
+    }
+
     public class SiweRecapCapability
     {
         public const string DefaultTarget = "any";
@@ -68,12 +81,12 @@ namespace ExampleProjectSiwe.SiweRecap
             string siweNamespaceField    = resourceUrnFields[2];
             string encodedJsonCapability = resourceUrnFields[3];
 
-            if (!string.IsNullOrEmpty(siweNamespaceField))
+            if (string.IsNullOrEmpty(siweNamespaceField))
             {
                 throw new SiweRecapException("Resource Urn has a null/empty namespace.");
             }
 
-            if (!string.IsNullOrEmpty(encodedJsonCapability))
+            if (string.IsNullOrEmpty(encodedJsonCapability))
             {
                 throw new SiweRecapException("Resource Urn has a null/empty Recap Object.");
             }
@@ -83,14 +96,24 @@ namespace ExampleProjectSiwe.SiweRecap
             string decodedJsonCapability =
                 Encoding.ASCII.GetString(Convert.FromBase64String(encodedJsonCapability));
 
-            SiweRecapCapability? capability =
-                JsonSerializer.Deserialize<SiweRecapCapability>(decodedJsonCapability);
+            SiweRecapCapabilityDeserialized? capabilitySeed =
+                JsonSerializer.Deserialize<SiweRecapCapabilityDeserialized>(decodedJsonCapability);
 
-            if ((capabilityMap != null) && (capability != null))
+            SiweRecapCapability? capability = null;
+
+            if (capabilitySeed != null)
             {
-                if (!capabilityMap.ContainsKey(siweNamespace.ToString()))
+                capability =
+                    new SiweRecapCapability(capabilitySeed.DefaultActions
+                                            , capabilitySeed.TargetedActions
+                                            , new Dictionary<string, string>());
+
+                if ((capabilityMap != null) && (capability != null))
                 {
-                    capabilityMap[siweNamespace.ToString()] = capability;
+                    if (!capabilityMap.ContainsKey(siweNamespace.ToString()))
+                    {
+                        capabilityMap[siweNamespace.ToString()] = capability;
+                    }
                 }
             }
 
@@ -121,7 +144,10 @@ namespace ExampleProjectSiwe.SiweRecap
         {            
             var capabilityTextLines = new HashSet<string>();
 
-            capabilityTextLines.Add(FormatDefaultActions(siweNamespace, _defaultActions));
+            if (_defaultActions.Count > 0)
+            {
+                capabilityTextLines.Add(FormatDefaultActions(siweNamespace, _defaultActions));
+            }
 
             foreach (var target in _targetedActions.Keys)
             {
