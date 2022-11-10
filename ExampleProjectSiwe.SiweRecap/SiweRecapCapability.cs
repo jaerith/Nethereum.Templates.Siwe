@@ -7,13 +7,13 @@ namespace ExampleProjectSiwe.SiweRecap
 {
     using NamespaceActionsMap = Dictionary<string, HashSet<string>>;
 
-    internal class SiweRecapCapabilityDeserialized
+    internal class SiweRecapCapabilitySeed
     {
         public HashSet<string> DefaultActions { get; set; }
 
         public NamespaceActionsMap TargetedActions { get; set; }
 
-        public SiweRecapCapabilityDeserialized()
+        public SiweRecapCapabilitySeed()
         { 
             DefaultActions  = new HashSet<string>();
             TargetedActions = new NamespaceActionsMap();
@@ -96,8 +96,8 @@ namespace ExampleProjectSiwe.SiweRecap
             string decodedJsonCapability =
                 Encoding.ASCII.GetString(Convert.FromBase64String(encodedJsonCapability));
 
-            SiweRecapCapabilityDeserialized? capabilitySeed =
-                JsonSerializer.Deserialize<SiweRecapCapabilityDeserialized>(decodedJsonCapability);
+            SiweRecapCapabilitySeed? capabilitySeed =
+                JsonSerializer.Deserialize<SiweRecapCapabilitySeed>(decodedJsonCapability);
 
             SiweRecapCapability? capability = null;
 
