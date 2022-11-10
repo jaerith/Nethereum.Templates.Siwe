@@ -14,6 +14,16 @@ namespace ExampleProjectSiwe.SiweRecap
     {
         public const string SiweRecapResourcePrefix = "urn:recap";
 
+        public static bool ContainsIgnoreCase(this IEnumerable<string> container, string rvalue)
+        {
+            return container.Any(x => x.EqualsIgnoreCase(rvalue));
+        }
+
+        public static bool EqualsIgnoreCase(this string lvalue, string rvalue)
+        {
+            return lvalue.Equals(rvalue, StringComparison.OrdinalIgnoreCase);
+        }
+
         public static SiweMessage InitRecap(this SiweMessage msg, CapabilityMap capabilites, string delegateUri)
         {
             msg.InitRecapStatement(capabilites, delegateUri);
@@ -73,8 +83,9 @@ namespace ExampleProjectSiwe.SiweRecap
                 SiweRecapCapability capability = capabilities[ns.ToString()];
 
                 hasPermissions =
-                    capability.DefaultActions.Contains(action) ||
-                    capability.TargetedActions.Any(x => (x.Key == target) && capability.TargetedActions[x.Key].Contains(target));
+                    capability.DefaultActions.Any(x => x.EqualsIgnoreCase(action)) ||
+                    capability.TargetedActions.Where(x => x.Key.EqualsIgnoreCase(target)).ToList()
+                                              .Any(x => x.Value.ContainsIgnoreCase(action));
             }
 
             return hasPermissions;
