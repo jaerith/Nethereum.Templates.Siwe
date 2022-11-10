@@ -39,7 +39,7 @@ namespace ExampleProjectSiwe.SiweRecap
                     .ToStatementText(siweNamespace)
                     .ToList()
                     .ForEach(actionStmt =>
-                             recapStatementBuilder.Append(string.Format(" ({0}) {1}", lineNum, actionStmt)));
+                             recapStatementBuilder.Append(string.Format(" ({0}) {1}", ++lineNum, actionStmt)));
             }
 
             msg.Statement = recapStatementBuilder.ToString();
