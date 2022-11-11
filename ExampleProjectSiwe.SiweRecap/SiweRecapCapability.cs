@@ -9,8 +9,10 @@ namespace ExampleProjectSiwe.SiweRecap
 
     internal class SiweRecapCapabilitySeed
     {
+        [JsonPropertyName("def")]
         public HashSet<string> DefaultActions { get; set; }
 
+        [JsonPropertyName("tar")]
         public NamespaceActionsMap TargetedActions { get; set; }
 
         public SiweRecapCapabilitySeed()
@@ -30,8 +32,10 @@ namespace ExampleProjectSiwe.SiweRecap
 
         private readonly Dictionary<string, string> _extraFields;
 
+        [JsonPropertyName("def")]
         public HashSet<string> DefaultActions { get { return _defaultActions; } }
 
+        [JsonPropertyName("tar")]
         public NamespaceActionsMap TargetedActions { get { return _targetedActions; } }
 
         public SiweRecapCapability(HashSet<string> defaultActions,
