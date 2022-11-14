@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Text;
+
+using Newtonsoft.Json;
 
 namespace ExampleProjectSiwe.SiweRecap
 {
@@ -9,10 +9,10 @@ namespace ExampleProjectSiwe.SiweRecap
 
     internal class SiweRecapCapabilitySeed
     {
-        [JsonPropertyName("def")]
+        [JsonProperty("def")]
         public HashSet<string> DefaultActions { get; set; }
 
-        [JsonPropertyName("tar")]
+        [JsonProperty("tar")]
         public NamespaceActionsMap TargetedActions { get; set; }
 
         public SiweRecapCapabilitySeed()
@@ -32,10 +32,10 @@ namespace ExampleProjectSiwe.SiweRecap
 
         private readonly Dictionary<string, string> _extraFields;
 
-        [JsonPropertyName("def")]
+        [JsonProperty("def")]
         public HashSet<string> DefaultActions { get { return _defaultActions; } }
 
-        [JsonPropertyName("tar")]
+        [JsonProperty("tar")]
         public NamespaceActionsMap TargetedActions { get { return _targetedActions; } }
 
         public SiweRecapCapability(HashSet<string> defaultActions,
@@ -45,22 +45,6 @@ namespace ExampleProjectSiwe.SiweRecap
             _defaultActions  = defaultActions;
             _targetedActions = targetedActions;
             _extraFields     = extraFields;
-        }
-
-        public static SiweRecapCapability? Decode(string encodedJsonCapability)
-        {
-            if (string.IsNullOrEmpty(encodedJsonCapability))
-            {
-                throw new SiweRecapException("Base64 Encoding of Recap Capability is empty or null.");
-            }
-
-            string decodedJsonCapability =
-                Encoding.ASCII.GetString(Convert.FromBase64String(encodedJsonCapability));
-
-            SiweRecapCapability? capability =
-                JsonSerializer.Deserialize<SiweRecapCapability>(decodedJsonCapability);
-
-            return capability;
         }
 
         public static SiweRecapCapability? DecodeResourceUrn(string resourceUrn, 
@@ -101,7 +85,7 @@ namespace ExampleProjectSiwe.SiweRecap
                 Encoding.ASCII.GetString(Convert.FromBase64String(encodedJsonCapability));
 
             SiweRecapCapabilitySeed? capabilitySeed =
-                JsonSerializer.Deserialize<SiweRecapCapabilitySeed>(decodedJsonCapability);
+                 JsonConvert.DeserializeObject<SiweRecapCapabilitySeed?>(decodedJsonCapability);
 
             SiweRecapCapability? capability = null;
 
@@ -126,7 +110,7 @@ namespace ExampleProjectSiwe.SiweRecap
 
         public string Encode()
         {
-            string jsonCapability = JsonSerializer.Serialize(this);
+            string jsonCapability = JsonConvert.SerializeObject(this, Formatting.Indented);
 
             return Convert.ToBase64String(Encoding.ASCII.GetBytes(jsonCapability));
         }
